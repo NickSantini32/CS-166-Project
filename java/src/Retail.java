@@ -275,6 +275,7 @@ public class Retail {
                 System.out.println("MAIN MENU");
                 System.out.println("---------");
                 System.out.println("1. View Stores within 30 miles");
+                viewStores(esql);
                 System.out.println("2. View Product List");
                 System.out.println("3. Place a Order");
                 System.out.println("4. View 5 recent orders");
@@ -403,7 +404,7 @@ public class Retail {
    public static void viewStores(Retail esql) {
      System.out.println("woah");
      try{
-       String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
+       String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", esql.name, password);
        List<List<String>> result = esql.executeQueryAndReturnResult(query);
        double lat1 = Double.parseDouble(result.get(0).get(1));
        double long1 = Double.parseDouble(result.get(0).get(2));
