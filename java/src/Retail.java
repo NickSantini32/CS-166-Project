@@ -404,10 +404,12 @@ public class Retail {
     **/
    public static String LogIn(Retail esql){
       try{
+         String name = "";
+         String password = "";
          System.out.print("\tEnter name: ");
-         String name = in.readLine();
+         name = in.readLine();
          System.out.print("\tEnter password: ");
-         String password = in.readLine();
+         password = in.readLine();
 
          String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
          
@@ -419,10 +421,18 @@ public class Retail {
             String LoginType = qResults.get(0).get(5);
             esql.userId = qResults.get(0).get(0);
             switch (LoginType) {
-               case "customer": esql.access_level = ACCESS_LEVEL.CUSTOMER; break;
-               case "manager": esql.access_level = ACCESS_LEVEL.MANAGER; break;
-               case "admin": esql.access_level = ACCESS_LEVEL.ADMIN; break;
-               default: throw new Exception("Unknown access type: " + LoginType);
+               case "customer": 
+                  esql.access_level = ACCESS_LEVEL.CUSTOMER; 
+                  break;
+               case "manager": 
+                  esql.access_level = ACCESS_LEVEL.MANAGER; 
+                  break;
+               case "admin": 
+                  esql.access_level = ACCESS_LEVEL.ADMIN; 
+                  break;
+               default: 
+                  throw new Exception("Unknown access type: " + LoginType);
+                  break;
             }
 
             return name;
