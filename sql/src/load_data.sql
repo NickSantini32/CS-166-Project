@@ -22,7 +22,7 @@ ALTER SEQUENCE orders_orderNumber_seq RESTART 501;
 
 
 COPY ProductSupplyRequests
-FROM '/productSupplyRequests.csv'
+FROM '/extra/nsant026/CS-166-Project/data/productSupplyRequests.csv'
 WITH DELIMITER ',' CSV HEADER;
 ALTER SEQUENCE productsupplyrequests_requestNumber_seq RESTART 11;
 
