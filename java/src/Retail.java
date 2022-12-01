@@ -275,8 +275,6 @@ public class Retail {
                 System.out.println("MAIN MENU");
                 System.out.println("---------");
                 System.out.println("1. View Stores within 30 miles");
-                System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-                viewStores(esql);
                 System.out.println("2. View Product List");
                 System.out.println("3. Place a Order");
                 System.out.println("4. View 5 recent orders");
