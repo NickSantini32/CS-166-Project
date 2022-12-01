@@ -418,21 +418,21 @@ public class Retail {
          List<List<String>> qResults = esql.executeQueryAndReturnResult(query);
          if (!qResults.isEmpty()) {
             // Check user type and adjust access level
-            String LoginType = qResults.get(0).get(5);
-            esql.userId = qResults.get(0).get(0);
+            String LoginType = qResults.get(0).get(5).trim();
+            esql.userId = qResults.get(0).get(1).trim();
             switch (LoginType) {
-               case "customer": 
-                  esql.access_level = ACCESS_LEVEL.CUSTOMER; 
+               case "customer":
+                  esql.access_level = ACCESS_LEVEL.CUSTOMER;
                   break;
-               case "manager": 
-                  esql.access_level = ACCESS_LEVEL.MANAGER; 
+               case "manager":
+                  esql.access_level = ACCESS_LEVEL.MANAGER;
                   break;
-               case "admin": 
-                  esql.access_level = ACCESS_LEVEL.ADMIN; 
+               case "admin":
+                  esql.access_level = ACCESS_LEVEL.ADMIN;
                   break;
-               default: 
+               default:
                   throw new Exception("Unknown access type: " + LoginType);
-                  break;
+                  //break;
             }
 
             return name;
@@ -450,31 +450,32 @@ public class Retail {
     if (esql.access_level.val == 0) { System.out.println("Error: FORBIDDEN"); return; }
 
      try{
-       String query = String.format("SELECT * FROM USERS WHERE name = '%s'", esql.userId);
+       String query = String.format("SELECT name, latitude, longitude FROM USERS WHERE name = '%s'", esql.userId);
        List<List<String>> result = esql.executeQueryAndReturnResult(query);
-       double lat1 = Double.parseDouble(result.get(0).get(1));
-       double long1 = Double.parseDouble(result.get(0).get(2));
+       double lat1 = Double.parseDouble(result.get(0).get(1).trim());
+       double long1 = Double.parseDouble(result.get(0).get(2).trim());
 
 
         query = String.format("SELECT name, latitude, longitude FROM Store");
         result = esql.executeQueryAndReturnResult(query);
-        List<List<String>> ret = new ArrayList<List<String>>();
 
+
+        System.out.println("");
+        System.out.println("Stores Within 30 Miles:");
         for (int i = 0; i < result.size(); i++){
           double lat2 = Double.parseDouble(result.get(i).get(1));
           double long2 = Double.parseDouble(result.get(i).get(2));
+    
           if (esql.calculateDistance(lat1, long1, lat2, long2) <= 30){
-            ret.add(result.get(i));
-
-            for (int j = 0; j < result.get(i).size(); j++){
-              System.out.println(result.get(i).get(j));
-            }
+            System.out.println(result.get(i).get(0));
           }
 
-          return;
        }
+       System.out.println("");
+       return;
+
      } catch(Exception e){
-        System.out.println("woah1");
+        System.out.println("fail");
         System.err.println (e.getMessage ());
         return;
      }
