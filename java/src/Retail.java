@@ -438,7 +438,7 @@ public class Retail {
 
    public static void viewStores(Retail esql) {
     if (esql.access_level.val == 0) { System.out.println("Error: FORBIDDEN"); return; }
-    
+
      try{
        String query = String.format("SELECT * FROM USERS WHERE name = '%s'", esql.userId);
        List<List<String>> result = esql.executeQueryAndReturnResult(query);
@@ -462,11 +462,12 @@ public class Retail {
           }
 
           return;
-       }catch(Exception e){
-          System.out.println("woah1");
-          System.err.println (e.getMessage ());
-          return;
        }
+     } catch(Exception e){
+        System.out.println("woah1");
+        System.err.println (e.getMessage ());
+        return;
+     }
    }
 
    public static void viewProducts(Retail esql) {
