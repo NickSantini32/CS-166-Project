@@ -320,6 +320,7 @@ public class Retail {
                    case 20:
                      // Reset access level on logout
                      esql.access_level = ACCESS_LEVEL.NONE;
+                     esql.userId = "";
                      usermenu = false;
                      break;
                    default : System.out.println("Unrecognized choice!"); break;
