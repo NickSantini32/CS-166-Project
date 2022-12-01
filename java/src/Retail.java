@@ -403,7 +403,7 @@ public class Retail {
    public static void viewStores(Retail esql) {
      System.out.println("woah");
      try{
-       String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", esql.name, password);
+       String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
        List<List<String>> result = esql.executeQueryAndReturnResult(query);
        double lat1 = Double.parseDouble(result.get(0).get(1));
        double long1 = Double.parseDouble(result.get(0).get(2));
@@ -416,7 +416,7 @@ public class Retail {
         for (int i = 0; i < result.size(); i++){
           double lat2 = Double.parseDouble(result.get(i).get(1));
           double long2 = Double.parseDouble(result.get(i).get(2));
-          if (calculateDistance(lat1, long1, lat2, long2) <= 30){
+          if (esql.calculateDistance(lat1, long1, lat2, long2) <= 30){
             ret.add(result.get(i));
 
             for (int j = 0; j < result.get(i).size(); j++){
@@ -426,11 +426,11 @@ public class Retail {
           }
         }
 
-        return null;
+        return;
      }catch(Exception e){
         System.out.println("woah1");
         System.err.println (e.getMessage ());
-        return null;
+        return;
      }
    }
    public static void viewProducts(Retail esql) {}
