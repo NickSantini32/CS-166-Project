@@ -401,8 +401,8 @@ public class Retail {
 
   //view stores within 30 miles
    public static void viewStores(Retail esql) {
+     System.out.println("woah");
      try{
-       System.out.println("woah");
        String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
        List<List<String>> result = esql.executeQueryAndReturnResult(query);
        double lat1 = Double.parseDouble(result.get(0).get(1));
@@ -428,6 +428,7 @@ public class Retail {
 
         return null;
      }catch(Exception e){
+        System.out.println("woah1");
         System.err.println (e.getMessage ());
         return null;
      }
