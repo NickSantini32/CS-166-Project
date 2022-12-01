@@ -448,7 +448,7 @@ public class Retail {
 
         query = String.format("SELECT name, latitude, longitude FROM Store");
         result = esql.executeQueryAndReturnResult(query);
-        List<List<String>> ret = new List<List<String>>();
+        List<List<String>> ret = new ArrayList<List<String>>();
 
         for (int i = 0; i < result.size(); i++){
           double lat2 = Double.parseDouble(result.get(i).get(1));
