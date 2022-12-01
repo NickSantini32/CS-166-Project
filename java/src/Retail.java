@@ -67,11 +67,11 @@ public class Retail {
       }//end catch
    }//end Retail
 
-   // Method to calculate euclidean distance between two latitude, longitude pairs. 
+   // Method to calculate euclidean distance between two latitude, longitude pairs.
    public double calculateDistance (double lat1, double long1, double lat2, double long2){
       double t1 = (lat1 - lat2) * (lat1 - lat2);
       double t2 = (long1 - long2) * (long1 - long2);
-      return Math.sqrt(t1 + t2); 
+      return Math.sqrt(t1 + t2);
    }
    /**
     * Method to execute an update SQL statement.  Update SQL instructions
@@ -357,11 +357,11 @@ public class Retail {
          String name = in.readLine();
          System.out.print("\tEnter password: ");
          String password = in.readLine();
-         System.out.print("\tEnter latitude: ");   
+         System.out.print("\tEnter latitude: ");
          String latitude = in.readLine();       //enter lat value between [0.0, 100.0]
          System.out.print("\tEnter longitude: ");  //enter long value between [0.0, 100.0]
          String longitude = in.readLine();
-         
+
          String type="Customer";
 
 			String query = String.format("INSERT INTO USERS (name, password, latitude, longitude, type) VALUES ('%s','%s', %s, %s,'%s')", name, password, latitude, longitude, type);
@@ -387,8 +387,9 @@ public class Retail {
 
          String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
          int userNum = esql.executeQuery(query);
-	 if (userNum > 0)
-		return name;
+      	 if (userNum > 0)
+      		return name;
+
          return null;
       }catch(Exception e){
          System.err.println (e.getMessage ());
@@ -398,7 +399,38 @@ public class Retail {
 
 // Rest of the functions definition go in here
 
-   public static void viewStores(Retail esql) {}
+  //view stores within 30 miles
+   public static void viewStores(Retail esql) {
+     try{
+       String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
+       List<List<String>> result = esql.executeQueryAndReturnResult(query);
+       double lat1 = Double.parseDouble(result.get(0).get(1));
+       double long1 = Double.parseDouble(result.get(0).get(2));
+
+
+        query = String.format("SELECT name, latitude, longitude FROM Store");
+        result = esql.executeQueryAndReturnResult(query);
+        List<List<String>> ret;
+
+        for (int i = 0; i < result.size(); i++){
+          double lat2 = Double.parseDouble(result.get(i).get(1));
+          double long2 = Double.parseDouble(result.get(i).get(2));
+          if (calculateDistance(lat1, long1, lat2, long2) <= 30){
+            ret.add(result.get(i));
+
+            for (int j = 0; j < result.get(i).size(); j++){
+              System.out.println(result.get(i).get(j));
+            }
+            System.out.println("");
+          }
+        }
+
+        return null;
+     }catch(Exception e){
+        System.err.println (e.getMessage ());
+        return null;
+     }
+   }
    public static void viewProducts(Retail esql) {}
    public static void placeOrder(Retail esql) {}
    public static void viewRecentOrders(Retail esql) {}
@@ -409,4 +441,3 @@ public class Retail {
    public static void placeProductSupplyRequests(Retail esql) {}
 
 }//end Retail
-
