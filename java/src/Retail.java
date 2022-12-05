@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.lang.Math;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+
 /**
  * This class defines a simple embedded SQL utility class that is designed to
  * work with PostgreSQL JDBC drivers.
@@ -446,6 +449,7 @@ public class Retail {
 
 // Rest of the functions definition go in here
 
+  //print stores within 30 miles of user
    public static void viewStores(Retail esql) {
     if (esql.access_level.val == 0) { System.out.println("Error: FORBIDDEN"); return; }
 
@@ -465,7 +469,7 @@ public class Retail {
         for (int i = 0; i < result.size(); i++){
           double lat2 = Double.parseDouble(result.get(i).get(1));
           double long2 = Double.parseDouble(result.get(i).get(2));
-    
+
           if (esql.calculateDistance(lat1, long1, lat2, long2) <= 30){
             System.out.println(result.get(i).get(0));
           }
@@ -475,19 +479,119 @@ public class Retail {
        return;
 
      } catch(Exception e){
-        System.out.println("fail");
         System.err.println (e.getMessage ());
         return;
      }
    }
 
+   //print all products given a store ID
    public static void viewProducts(Retail esql) {
       if (esql.access_level.val == 0) { System.out.println("Error: FORBIDDEN"); return; }
 
+      try{
+        String id = "";
+        System.out.print("Enter store ID: ");
+        id = in.readLine();
+
+        String query = String.format("SELECT productName, numberOfUnits, pricePerUnit FROM Product WHERE storeID = '%s'", id);
+        int result = esql.executeQueryAndPrintResult(query);
+
+        if (result == 0){
+          System.out.println("No matching store ID");
+        }
+        System.out.println("");
+        return;
+
+      } catch(Exception e){
+         System.err.println (e.getMessage ());
+         return;
+      }
+
+
    }
 
+   //make an order
    public static void placeOrder(Retail esql) {
       if (esql.access_level.val == 0) { System.out.println("Error: FORBIDDEN"); return; }
+
+
+      try{
+        String storeID = "";
+        String prodName = "";
+        String temp = "";
+        int numUnits = 0;
+        System.out.print("Enter store ID: ");
+        storeID = in.readLine();
+        System.out.print("Enter store product name: ");
+        prodName = in.readLine();
+        System.out.print("Enter store number of units: ");
+        temp = in.readLine();
+        numUnits = Integer.parseInt(temp);
+
+
+        //get user info
+        String query = String.format("SELECT name, latitude, longitude, userId FROM USERS WHERE name = '%s'", esql.userId);
+        List<List<String>> result = esql.executeQueryAndReturnResult(query);
+        double lat1 = Double.parseDouble(result.get(0).get(1).trim());
+        double long1 = Double.parseDouble(result.get(0).get(2).trim());
+        int userIDnum = Integer.parseInt(result.get(0).get(3).trim());
+
+        //get store info
+        //query = String.format("SELECT storeID, latitude, longitude FROM Store");
+        query = String.format("SELECT storeID, latitude, longitude FROM Store WHERE storeID = '%s'", storeID);
+        result = esql.executeQueryAndReturnResult(query);
+
+        //check if store exists
+        if (result.size() == 0){
+         System.out.println("Error: store number " + storeID + " does not exist");
+         System.out.println("");
+         return;
+        }
+
+        double lat2 = Double.parseDouble(result.get(0).get(1));
+        double long2 = Double.parseDouble(result.get(0).get(2));
+
+        //check id store speccified is within 30 miles, if not return
+        if (esql.calculateDistance(lat1, long1, lat2, long2) > 30){
+         System.out.println("Error: store too far away");
+         System.out.println("");
+         return;
+        }
+
+        //validate product EXISTS
+        query = String.format("SELECT numberOfUnits FROM Product WHERE storeID = '%s' AND productName = '%s'", storeID, prodName);
+        result = esql.executeQueryAndReturnResult(query);
+        if (result.size() == 0){
+         System.out.println("Error: product name " + prodName + " does not exist at this store");
+         System.out.println("");
+         return;
+        }
+
+        //validate quantity doesnt exceed
+        if (Integer.parseInt(result.get(0).get(0)) > numUnits || numUnits < 1){
+         System.out.println("Error: invalid quantity");
+         System.out.println("");
+         return;
+        }
+
+        Timestamp ts = Timestamp.from(Instant.now());
+
+        //update another table I think
+
+        query = "INSERT INTO Orders (customerID, storeID, productName, unitsOrdered, orderTime)" +
+          "VALUES ( '" + userIDnum + "', '" + storeID + "', '" + prodName + "', '"  + numUnits + "', '" + ts.toString() + "' );";
+        System.out.println(query);
+        esql.executeQuery(query);
+
+        System.out.println("");
+        return;
+
+      } catch(Exception e){
+         System.err.println (e.getMessage ());
+         return;
+      }
+
+
 
    }
 
@@ -531,6 +635,113 @@ public class Retail {
 
    public static void updateProduct(Retail esql) {
       if (esql.access_level.val < ACCESS_LEVEL.MANAGER.val) { System.out.println("Error: FORBIDDEN"); return; }
+
+      try{
+        String storeID = "";
+        String prodName = "";
+        String temp = "";
+        int numUnits = -1;
+        double ppu = -1;
+
+        System.out.print("Enter store ID: ");
+        storeID = in.readLine();
+
+        String query = String.format("SELECT managerID FROM Store WHERE storeID = '%s'", storeID);
+        List<List<String>> result = esql.executeQueryAndReturnResult(query);
+
+        //check if store exists
+        if (result.size() == 0){
+         System.out.println("Error: store number " + storeID + " does not exist");
+         System.out.println("");
+         return;
+        }
+
+        //check if manager is current user if not admin
+        if (Integer.parseInt(result.get(0).get(0).trim()) != esql.userId && esql.access_level.val != ACCESS_LEVEL.ADMIN.val){
+         System.out.println("Error: you are not the manager of store " + storeID);
+         System.out.println("");
+         return;
+        }
+
+        System.out.print("Enter store product name: ");
+        prodName = in.readLine();
+
+        //validate product EXISTS
+        query = String.format("SELECT numberOfUnits FROM Product WHERE storeID = '%s' AND productName = '%s'", storeID, prodName);
+        result = esql.executeQueryAndReturnResult(query);
+        if (result.size() == 0){
+         System.out.println("Error: product name " + prodName + " does not exist at this store");
+         System.out.println("");
+         return;
+        }
+
+        //choose field(s) to update
+        boolean miniMenu = true;
+        boolean miniMenu2 = true;
+        while (miniMenu){
+          miniMenu2 = true;
+          System.out.println("Choose a field to update: ");
+          System.out.println("1. number of units");
+          System.out.println("2. price per unit");
+          System.out.println("3. exit");
+          System.out.println("");
+          switch (readChoice()){
+             case 1:
+                while (miniMenu2){
+                  System.out.println("Enter new quantity of units");
+                  temp = in.readLine();
+                  if (Integer.parseInt(temp) < 0){
+                    System.out.println("Unrecognized choice!");
+                  }
+                  else {
+                    numUnits = Integer.parseInt(temp);
+                    miniMenu2 = false;
+                  }
+                }
+                break;
+             case 2:
+               while (miniMenu2){
+                 System.out.println("Enter new price per unit");
+                 temp = in.readLine();
+                 if (Double.parseDouble(temp) < 0){
+                   System.out.println("Unrecognized choice!");
+                 }
+                 else {
+                   ppu = Double.parseDouble(temp);
+                   miniMenu2 = false;
+                 }
+               }
+               break;
+             case 3:
+               miniMenu = false;
+               break;
+             default : System.out.println("Unrecognized choice!"); break;
+          }
+        }
+
+
+        //update query
+        //Product and ProductUpdates tables will need to be updated accordingly if any updates take place
+        if (numUnits == -1 && ppu == -1){
+          return;
+        }
+        if (numUnits > -1){
+          query = String.format("UPDATE Product SET numberOfUnits = %s WHERE storeID = '%s' AND productName = '%s'", numUnits, storeID, prodName);
+          result = esql.executeQuery(query);
+        }
+        if (ppu > -1){
+          query = String.format("UPDATE Product SET pricePerUnit = %s WHERE storeID = '%s' AND productName = '%s'", ppu, storeID, prodName);
+          result = esql.executeQuery(query);
+        }
+        Timestamp ts = Timestamp.from(Instant.now());
+        query = uery = String.format("INSERT INTO ProductUpdates (managerID, storeID, productName, updatedOn) VALUES ('%s','%s', '%s', %s)", esql.userId, storeID, prodName, ts.toString());
+        result = esql.executeQuery(query)
+
+
+      } catch(Exception e){
+         System.err.println (e.getMessage ());
+         return;
+      }
 
    }
    public static void viewRecentUpdates(Retail esql) {
