@@ -41,9 +41,9 @@ public class Retail {
                                 new InputStreamReader(System.in));
 
    private enum ACCESS_LEVEL {
-      NONE(0), 
-      CUSTOMER(1), 
-      MANAGER(2), 
+      NONE(0),
+      CUSTOMER(1),
+      MANAGER(2),
       ADMIN(3);
 
       public final int val;
@@ -54,7 +54,7 @@ public class Retail {
    }
 
    private ACCESS_LEVEL access_level = ACCESS_LEVEL.NONE;
-   private String userId = ""; 
+   private String userId = "";
 
    /**
     * Creates a new instance of Retail shop
@@ -415,25 +415,25 @@ public class Retail {
          password = in.readLine();
 
          String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
-         
+
          // We want to extract user type from query results
          int userNum = esql.executeQueryAndPrintResult(query); // for debugging
          List<List<String>> qResults = esql.executeQueryAndReturnResult(query);
          if (!qResults.isEmpty()) {
             // Check user type and adjust access level
-            String LoginType = qResults.get(0).get(5);
-            esql.userId = qResults.get(0).get(0);
-            switch (LoginType.trim()) {
-               case "customer": 
-                  esql.access_level = ACCESS_LEVEL.CUSTOMER; 
+            String LoginType = qResults.get(0).get(5).trim();
+            esql.userId = qResults.get(0).get(1).trim();
+            switch (LoginType) {
+               case "customer":
+                  esql.access_level = ACCESS_LEVEL.CUSTOMER;
                   break;
-               case "manager": 
-                  esql.access_level = ACCESS_LEVEL.MANAGER; 
+               case "manager":
+                  esql.access_level = ACCESS_LEVEL.MANAGER;
                   break;
-               case "admin": 
-                  esql.access_level = ACCESS_LEVEL.ADMIN; 
+               case "admin":
+                  esql.access_level = ACCESS_LEVEL.ADMIN;
                   break;
-               default: 
+               default:
                   throw new Exception("Unknown access type: " + LoginType);
             }
 
@@ -460,7 +460,38 @@ public class Retail {
    }
 
    public static void viewStores(Retail esql) {
+    if (esql.access_level.val == 0) { System.out.println("Error: FORBIDDEN"); return; }
 
+     try{
+       String query = String.format("SELECT name, latitude, longitude FROM USERS WHERE name = '%s'", esql.userId);
+       List<List<String>> result = esql.executeQueryAndReturnResult(query);
+       double lat1 = Double.parseDouble(result.get(0).get(1).trim());
+       double long1 = Double.parseDouble(result.get(0).get(2).trim());
+
+
+        query = String.format("SELECT name, latitude, longitude FROM Store");
+        result = esql.executeQueryAndReturnResult(query);
+
+
+        System.out.println("");
+        System.out.println("Stores Within 30 Miles:");
+        for (int i = 0; i < result.size(); i++){
+          double lat2 = Double.parseDouble(result.get(i).get(1));
+          double long2 = Double.parseDouble(result.get(i).get(2));
+    
+          if (esql.calculateDistance(lat1, long1, lat2, long2) <= 30){
+            System.out.println(result.get(i).get(0));
+          }
+
+       }
+       System.out.println("");
+       return;
+
+     } catch(Exception e){
+        System.out.println("fail");
+        System.err.println (e.getMessage ());
+        return;
+     }
    }
 
    public static void viewProducts(Retail esql) {
@@ -501,7 +532,7 @@ public class Retail {
                                   "ORDER BY O.orderTime DESC " +
                                   "LIMIT 5"
                                    , esql.userId);
-            break;   
+            break;
          case MANAGER:
             System.out.println("***** Orders *****");
             query = String.format("SELECT O.customerID, U.name, O.storeID, O.productName, O.orderTime " +
