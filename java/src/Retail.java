@@ -420,7 +420,7 @@ public class Retail {
             // Check user type and adjust access level
             String LoginType = qResults.get(0).get(5);
             esql.userId = qResults.get(0).get(0);
-            switch (LoginType) {
+            switch (LoginType.trim()) {
                case "customer": 
                   esql.access_level = ACCESS_LEVEL.CUSTOMER; 
                   break;
@@ -432,7 +432,6 @@ public class Retail {
                   break;
                default: 
                   throw new Exception("Unknown access type: " + LoginType);
-                  break;
             }
 
             return name;
@@ -446,39 +445,47 @@ public class Retail {
 
 // Rest of the functions definition go in here
 
-   public static void viewStores(Retail esql) {
-      if (esql.access_level.val == 0) { System.out.println("Error: FORBIDDEN"); return; }
+   public static String getManagerId() {
+      String mId = "";
+      System.out.print("\tEnter managerId: ");
+      mId = in.readLine();
+      return mId;
+   }
 
-      try{
-         String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
-         List<List<String>> result = esql.executeQueryAndReturnResult(query);
-         double lat1 = Double.parseDouble(result.get(0).get(1));
-         double long1 = Double.parseDouble(result.get(0).get(2));
+   public static void viewStores(Retail esql) {
+      System.out.println("View Stores is not set up yet");
+      // if (esql.access_level.val == 0) { System.out.println("Error: FORBIDDEN"); return; }
+
+      // try{
+      //    String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
+      //    List<List<String>> result = esql.executeQueryAndReturnResult(query);
+      //    double lat1 = Double.parseDouble(result.get(0).get(1));
+      //    double long1 = Double.parseDouble(result.get(0).get(2));
   
   
-          query = String.format("SELECT name, latitude, longitude FROM Store");
-          result = esql.executeQueryAndReturnResult(query);
-          List<List<String>> ret;
+      //     query = String.format("SELECT name, latitude, longitude FROM Store");
+      //     result = esql.executeQueryAndReturnResult(query);
+      //     List<List<String>> ret;
   
-          for (int i = 0; i < result.size(); i++){
-            double lat2 = Double.parseDouble(result.get(i).get(1));
-            double long2 = Double.parseDouble(result.get(i).get(2));
-            if (esql.calculateDistance(lat1, long1, lat2, long2) <= 30){
-              ret.add(result.get(i));
+      //     for (int i = 0; i < result.size(); i++){
+      //       double lat2 = Double.parseDouble(result.get(i).get(1));
+      //       double long2 = Double.parseDouble(result.get(i).get(2));
+      //       if (esql.calculateDistance(lat1, long1, lat2, long2) <= 30){
+      //         ret.add(result.get(i));
   
-              for (int j = 0; j < result.get(i).size(); j++){
-                System.out.println(result.get(i).get(j));
-              }
-              System.out.println("");
-            }
-          }
+      //         for (int j = 0; j < result.get(i).size(); j++){
+      //           System.out.println(result.get(i).get(j));
+      //         }
+      //         System.out.println("");
+      //       }
+      //     }
   
-          return;
-       }catch(Exception e){
-          System.out.println("woah1");
-          System.err.println (e.getMessage ());
-          return;
-       }
+      //     return;
+      //  }catch(Exception e){
+      //     System.out.println("woah1");
+      //     System.err.println (e.getMessage ());
+      //     return;
+      //  }
    }
 
    public static void viewProducts(Retail esql) {
@@ -500,20 +507,32 @@ public class Retail {
          case CUSTOMER:
             System.out.println("***** Last 5 Orders *****");
             query = String.format("SELECT S.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime " + 
-                                  "FROM STORES S, ORDERS O " + 
+                                  "FROM STORE S, ORDERS O " + 
                                   "WHERE S.storeID = O.storeID AND customerID = '%s' " +
                                   "ORDER BY O.orderTime DESC " +
                                   "LIMIT 5"
                                    , esql.userId);
             break;   
          case MANAGER:
-         case ADMIN:
             System.out.println("***** Orders *****");
             query = String.format("SELECT O.customerID, U.name, O.storeID, O.productName, O.orderTime " +
-                                  "FROM USERS U, STORES S, ORDERS O " +
-                                  "WHERE S.managerID = '%s' AND S.storeID = O.storeID AND U.userID = O.customerID" +
-                                  "ORDER BY O.orderTime DESC"
-                                   ,esql.userId);
+                                    "FROM USERS U, STORE S, ORDERS O " +
+                                    "WHERE S.managerID = '%s' AND S.storeID = O.storeID AND U.userID = O.customerID " +
+                                    "ORDER BY O.orderTime DESC"
+                                    ,esql.userId);
+            break;
+         case ADMIN:
+            try {
+               String mId = getManagerId();
+               System.out.println("***** Orders *****");
+               query = String.format("SELECT O.customerID, U.name, O.storeID, O.productName, O.orderTime " +
+                                    "FROM USERS U, STORE S, ORDERS O " +
+                                    "WHERE S.managerID = '%s' AND S.storeID = O.storeID AND U.userID = O.customerID " +
+                                    "ORDER BY O.orderTime DESC"
+                                    ,mId);
+            }catch(Exception e){
+               System.err.println (e.getMessage ());
+            }
             break; 
          default:
             System.out.println("Unknown Access Level: " + esql.access_level.val);
@@ -534,44 +553,80 @@ public class Retail {
    
    }
    public static void viewRecentUpdates(Retail esql) {
-      if (esql.access_level.val < ACCESS_LEVEL.MANAGER.val) { System.out.println("Error: FORBIDDEN"); return; }
-   
+      System.out.println("This is not implemented yet!");
    }
+
+   // DONE
    public static void viewPopularProducts(Retail esql) {
-      if (esql.access_level.val < ACCESS_LEVEL.MANAGER.val) { System.out.println("Error: FORBIDDEN"); return; }
+      String mId = "";
+
+      switch (esql.access_level) {
+         case CUSTOMER:
+            System.out.println("Error: FORBIDDEN"); 
+            return;
+         case MANAGER:
+            mId = esql.userId;
+            break;
+         case ADMIN:
+            mId = getManagerId();
+            break; 
+         default:
+            System.out.println("Unknown Access Level: " + esql.access_level.val);
+            break;
+      }
 
       System.out.println("***** Top 5 Popular Products *****");
-      String query = String.format("SELECT O.productName " +
+      String query = String.format("SELECT Os.productName " +
                             "FROM " +
                             "(SELECT O.productName, SUM(O.unitsOrdered) " +
-                            "FROM ORDERS O, STORES S " +
+                            "FROM ORDERS O, STORE S " +
                             "WHERE S.managerID = '%s' AND S.storeID = O.storeID " +
+                            "GROUP BY O.productName " +  
                             "ORDER BY SUM(O.unitsOrdered) DESC" +
-                            ") " +
+                            ") as Os " +
                             "LIMIT 5"
-                            , esql.userId);
+                            , mId);
       
       int ResponseLength = 0;
       try {
          ResponseLength = esql.executeQueryAndPrintResult(query);
-      } catch(Exception e){
+      } catch(Exception e){if (esql.access_level.val < ACCESS_LEVEL.MANAGER.val) { System.out.println("Error: FORBIDDEN"); return; }
          System.err.println (e.getMessage());
       }
       System.out.println(String.format("[%s Results]", ResponseLength));
    }
+
+   // DONE
    public static void viewPopularCustomers(Retail esql) {
-      if (esql.access_level.val < ACCESS_LEVEL.MANAGER.val) { System.out.println("Error: FORBIDDEN"); return; }
+      String mId = "";
+
+      switch (esql.access_level) {
+         case CUSTOMER:
+            System.out.println("Error: FORBIDDEN"); 
+            return;
+         case MANAGER:
+            mId = esql.userId;
+            break;
+         case ADMIN:
+            mId = getManagerId();
+            break; 
+         default:
+            System.out.println("Unknown Access Level: " + esql.access_level.val);
+            break;
+      }
+
 
       System.out.println("***** Top 5 Customers *****");
-      String query = String.format("SELECT U.name " +
+      String query = String.format("SELECT Us.name " +
                             "FROM " +
                             "(SELECT U.name, SUM(O.customerID) " +
-                            "FROM USERS U, ORDERS O, STORES S " +
+                            "FROM USERS U, ORDERS O, STORE S " +
                             "WHERE S.managerID = '%s' AND S.storeID = O.storeID AND U.userID = O.customerID " +
+                            "GROUP BY U.name " + 
                             "ORDER BY SUM(O.customerID) DESC" +
-                            ") " + 
+                            ") as Us " + 
                             "LIMIT 5"
-                            , esql.userId);
+                            , mId);
       
       int ResponseLength = 0;
       try {
@@ -580,7 +635,6 @@ public class Retail {
          System.err.println (e.getMessage());
       }
       System.out.println(String.format("[%s Results]", ResponseLength));
-   
    }
    public static void placeProductSupplyRequests(Retail esql) {
       if (esql.access_level.val < ACCESS_LEVEL.MANAGER.val) { System.out.println("Error: FORBIDDEN"); return; }
