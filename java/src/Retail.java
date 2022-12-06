@@ -58,7 +58,7 @@ public class Retail {
    }
 
    private ACCESS_LEVEL access_level = ACCESS_LEVEL.NONE;
-   private int userId = -1;
+   private String userId = "";
    private String userName = "";
 
    /**
@@ -328,7 +328,7 @@ public class Retail {
                    case 20:
                      // Reset access level on logout
                      esql.access_level = ACCESS_LEVEL.NONE;
-                     esql.userId = -1;
+                     esql.userId = "";
                      usermenu = false;
                      break;
                    default : System.out.println("Unrecognized choice!"); break;
@@ -427,7 +427,7 @@ public class Retail {
          if (!qResults.isEmpty()) {
             // Check user type and adjust access level
             String LoginType = qResults.get(0).get(5).trim();
-            esql.userId = Integer.parseInt(qResults.get(0).get(0).trim());
+            esql.userId = qResults.get(0).get(0).trim();
             esql.userName = qResults.get(0).get(1).trim();
             switch (LoginType) {
                case "customer":
@@ -620,7 +620,7 @@ public class Retail {
                                   "WHERE S.storeID = O.storeID AND customerID = '%s' " +
                                   "ORDER BY O.orderTime DESC " +
                                   "LIMIT 5"
-                                   , esql.userName);
+                                   , esql.userId);
             break;
          case MANAGER:
             System.out.println("***** Orders *****");
@@ -628,7 +628,7 @@ public class Retail {
                                     "FROM USERS U, STORE S, ORDERS O " +
                                     "WHERE S.managerID = '%s' AND S.storeID = O.storeID AND U.userID = O.customerID " +
                                     "ORDER BY O.orderTime DESC"
-                                    ,esql.userName);
+                                    ,esql.userId);
             break;
          case ADMIN:
             try {
@@ -684,7 +684,7 @@ public class Retail {
        }
 
        //check if manager is current user if not admin
-       if (Integer.parseInt(result.get(0).get(0).trim()) != esql.userId && esql.access_level.val != ACCESS_LEVEL.ADMIN.val){
+       if (Integer.parseInt(result.get(0).get(0).trim()) != Integer.parseInt(esql.userId) && esql.access_level.val != ACCESS_LEVEL.ADMIN.val){
         System.out.println("Error: you are not the manager of store " + storeID);
         System.out.println("");
         return;
@@ -938,7 +938,7 @@ public class Retail {
             System.out.println("Error: FORBIDDEN");
             return;
          case MANAGER:
-            mId = esql.userName;
+            mId = esql.userId;
             break;
          case ADMIN:
             mId = getInput("Enter ManagerId");
@@ -972,7 +972,7 @@ public class Retail {
             System.out.println("Error: FORBIDDEN");
             return;
          case MANAGER:
-            mId = esql.userName;
+            mId = esql.userId;
             break;
          case ADMIN:
             mId = getInput("Enter ManagerId");
@@ -1011,7 +1011,7 @@ public class Retail {
             System.out.println("Error: FORBIDDEN");
             return;
          case MANAGER:
-            mId = esql.userName;
+            mId = esql.userId;
             break;
          case ADMIN:
             mId = getInput("Enter ManagerId");
@@ -1052,7 +1052,7 @@ public class Retail {
                System.out.println("Error: FORBIDDEN");
                return;
             case MANAGER:
-               mId = esql.userName;
+               mId = esql.userId;
                break;
             case ADMIN:
                mId = getInput("Enter ManagerId");
